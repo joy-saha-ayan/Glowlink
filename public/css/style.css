@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlowLink - Create Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           GlowLink - Aesthetic Pastel Mode
+           ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            /* Updated Path for XAMPP localhost */
+            background: url('/glowlinkp/public/images/bk.jpg') center/cover no-repeat fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e2e8f0;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Lighter Overlay for the pastel aesthetic */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20, 10, 30, 0.4); 
+            z-index: -1;
+        }
+
+        /* Frosted Glass Container */
+        .auth-container {
+            background: rgba(30, 25, 45, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px 35px;
+            width: 90%;
+            max-width: 480px; 
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 
+                        inset 0 0 20px rgba(255, 255, 255, 0.1);
+            transition: transform 0.4s ease;
+            margin: 40px 0;
+        }
+
+        .auth-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .auth-container h2 {
+            text-align: center;
+            margin: 0 0 5px 0;
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .auth-container p.subtitle {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 13px;
+            margin-bottom: 25px;
+            font-weight: 400;
+        }
+
+        /* Fixed Image Slider */
+        .auth-slider {
+            width: 100%;
+            height: 180px; 
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #fff; 
+        }
+
+        .auth-slide-track {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            animation: crazySlide 9s infinite cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .auth-slide-track img {
+            width: 33.333%;
+            height: 100%;
+            object-fit: cover; 
+        }
+
+        @keyframes crazySlide {
+            0%, 25% { transform: translateX(0%); }
+            33%, 58% { transform: translateX(-33.333%); }
+            66%, 91% { transform: translateX(-66.666%); }
+            100% { transform: translateX(0%); }
+        }
+
+        form {
+            width: 100%;
+        }
+
+        .input-group { 
+            margin-bottom: 15px; 
+            width: 100%;
+        }
+
+        .input-with-icon { 
+            position: relative; 
+            width: 100%;
+        }
+
+        .input-with-icon i {
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%); 
+            color: #e2a5b6; 
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .input-with-icon input, .input-with-icon select {
+            width: 100%; 
+            padding: 14px 15px 14px 50px; 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px; 
+            font-family: 'Poppins', sans-serif; font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            transition: all 0.3s ease;
+            outline: none;
+            box-sizing: border-box; 
+        }
+
+        .input-with-icon select option {
+            background: #2a2035;
+            color: #fff;
+        }
+
+        .input-with-icon input:focus, .input-with-icon select:focus {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: #f472b6; 
+            box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
+        }
+        .input-with-icon input:focus + i { color: #f472b6; }
+
+        /* =========================================
+           BIGGER FOOTER LINK
+           ========================================= */
+        .switch-link {
+            display: block; 
+            text-align: center; 
+            margin-top: 30px; 
+            font-size: 22px; 
+            color: #ffffff; 
+            text-decoration: none; 
+            font-weight: 700; 
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.6); 
+            transition: 0.3s;
+        }
+        .switch-link:hover { 
+            color: #f472b6; 
+            transform: scale(1.05); 
+        }
+
+        /* =========================================
+           YOUR EXACT SCI-FI BUTTON 
+           ========================================= */
+        .btn-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 25px;
+            width: 100%;
+        }
+
+        button.sci-fi-btn {
+            position: relative;
+            width: 13em; 
+            height: 4em;
+            outline: none;
+            transition: 0.1s;
+            background-color: transparent;
+            border: none;
+            font-size: 15px; 
+            font-weight: bold;
+            color: #ddebf0;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-text {
+            position: relative;
+            z-index: 10; 
+        }
+
+        #clip {
+            --color: #e2a5b6;
+            position: absolute;
+            top: 0;
+            left: 0; 
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            border: 5px double var(--color);
+            box-shadow: inset 0px 0px 15px rgba(226, 165, 182, 0.5);
+            -webkit-clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+
+        .arrow {
+            position: absolute;
+            transition: 0.2s;
+            background-color: #e2a5b6;
+            top: 35%;
+            width: 11%;
+            height: 30%;
+        }
+
+        #leftArrow {
+            left: -13.5%;
+            -webkit-clip-path: polygon(100% 0, 100% 100%, 0 50%);
+            clip-path: polygon(100% 0, 100% 100%, 0 50%);
+        }
+
+        #rightArrow {
+            left: 102%;
+            -webkit-clip-path: polygon(100% 49%, 0 0, 0 100%);
+            clip-path: polygon(100% 49%, 0 0, 0 100%);
+        }
+
+        button.sci-fi-btn:hover #rightArrow {
+            background-color: #f472b6;
+            left: -15%;
+            animation: 0.6s ease-in-out both infinite alternate rightArrow8;
+        }
+
+        button.sci-fi-btn:hover #leftArrow {
+            background-color: #f472b6;
+            left: 103%;
+            animation: 0.6s ease-in-out both infinite alternate leftArrow8;
+        }
+
+        .corner {
+            position: absolute;
+            width: 4em;
+            height: 4em;
+            background-color: #e2a5b6;
+            box-shadow: inset 1px 1px 8px #f472b6;
+            transform: scale(1) rotate(45deg);
+            transition: 0.2s;
+        }
+
+        #rightTop { top: -1.98em; left: 91%; }
+        #leftTop { top: -1.96em; left: -3.0em; }
+        #leftBottom { top: 2.10em; left: -2.15em; }
+        #rightBottom { top: 45%; left: 88%; }
+
+        button.sci-fi-btn:hover #leftTop { animation: 0.1s ease-in-out 0.05s both changeColor8, 0.2s linear 0.4s both lightEffect8; }
+        button.sci-fi-btn:hover #rightTop { animation: 0.1s ease-in-out 0.15s both changeColor8, 0.2s linear 0.4s both lightEffect8; }
+        button.sci-fi-btn:hover #rightBottom { animation: 0.1s ease-in-out 0.25s both changeColor8, 0.2s linear 0.4s both lightEffect8; }
+        button.sci-fi-btn:hover #leftBottom { animation: 0.1s ease-in-out 0.35s both changeColor8, 0.2s linear 0.4s both lightEffect8; }
+
+        button.sci-fi-btn:hover .corner { transform: scale(1.25) rotate(45deg); }
+
+        button.sci-fi-btn:hover #clip {
+            animation: 0.2s ease-in-out 0.55s both greenLight8;
+            --color: #f472b6;
+        }
+
+        @keyframes changeColor8 {
+            from { background-color: #e2a5b6; }
+            to { background-color: #f472b6; }
+        }
+
+        @keyframes lightEffect8 {
+            from { box-shadow: 1px 1px 5px #f472b6; }
+            to { box-shadow: 0 0 2px #f472b6; }
+        }
+
+        @keyframes greenLight8 {
+            from {}
+            to { box-shadow: inset 0px 0px 32px #f472b6; }
+        }
+
+        @keyframes leftArrow8 {
+            from { transform: translate(0px); }
+            to { transform: translateX(10px); }
+        }
+
+        @keyframes rightArrow8 {
+            from { transform: translate(0px); }
+            to { transform: translateX(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2>CREATE AN ACCOUNT</h2>
+        <p class="subtitle">Join GlowLink and start your premium skincare journey!</p>
+
+        <div class="auth-slider">
+            <div class="auth-slide-track">
+                <img src="/glowlinkp/public/images/bg1.jpg" alt="Skincare 1">
+                <img src="/glowlinkp/public/images/bg2.jpg" alt="Skincare 2">
+                <img src="/glowlinkp/public/images/bg3.jpg" alt="Skincare 3">
+            </div>
+        </div>
+
+        <form>
+            <div class="input-group">
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" placeholder="Full Name" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" placeholder="Email Address" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-store"></i>
+                    <select required>
+                        <option value="" disabled selected>Register As</option>
+                        <option value="customer">Customer (Buy Products)</option>
+                        <option value="retailer">Retailer (Sell Products)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" placeholder="Create a strong password" required>
+                </div>
+            </div>
+
+            <div class="btn-wrapper">
+                <button type="submit" class="sci-fi-btn">
+                    <span class="btn-text">SIGN UP NOW</span>
+                    <div id="clip">
+                        <div id="leftTop" class="corner"></div>
+                        <div id="rightBottom" class="corner"></div>
+                        <div id="rightTop" class="corner"></div>
+                        <div id="leftBottom" class="corner"></div>
+                    </div>
+                    <span id="rightArrow" class="arrow"></span>
+                    <span id="leftArrow" class="arrow"></span>
+                </button>
+            </div>
+        </form>
+
+        <a href="login.php" class="switch-link">Already have an account? Login ✨</a>
+    </div>
+
+</body>
+</html>
