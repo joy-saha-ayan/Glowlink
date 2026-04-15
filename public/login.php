@@ -8,34 +8,52 @@ $message = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $database = new Database();
     $db = $database->getConnection();
-    
-    $user = new User($db);
-    $user->email = $_POST['email'];
-    $user->password = $_POST['password'];
+   
+    if ($db) {
+        $user = new User($db);
+        $user->email = trim($_POST['email'] ?? '');
+        $user->password = $_POST['password'] ?? '';
+        
+        try {
+            if (!empty($user->email) && !empty($user->password)) {
+                if ($user->login()) {
+                    // Prevent session fixation
+                    session_regenerate_id(true);
+                    
+                    // Store session data
+                    $_SESSION['user_id']   = $user->id;
+                    $_SESSION['user_name'] = $user->name;
+                    $_SESSION['user_role'] = $user->role;
+                    $_SESSION['role']      = $user->role;     // ← Added for dashboard compatibility
+                    $_SESSION['logged_in'] = true;
 
-    if ($user->login()) {
-        // লগিন সাকসেসফুল হলে সেশনে ডাটা সেভ করছি
-        $_SESSION['user_id'] = $user->id;
-        $_SESSION['user_name'] = $user->name;
-        $_SESSION['user_role'] = $user->role;
-        $_SESSION['logged_in'] = true;
-
-        // রোল অনুযায়ী আলাদা ড্যাশবোর্ডে রিডাইরেক্ট
-        if ($user->role == 'admin') {
-            header("Location: admin_dashboard.php");
-        } elseif ($user->role == 'retailer') {
-            header("Location: retailer_dashboard.php");
-        } else {
-            // ডিফল্টভাবে কাস্টমার ড্যাশবোর্ড
-            header("Location: customer_dashboard.php");
+                    // Redirect based on role
+                    if ($user->role === 'admin') {
+                        header("Location: admin_dashboard.php");
+                    } elseif ($user->role === 'retailer') {
+                        header("Location: retailer_dashboard.php");
+                    } elseif ($user->role === 'driver') {
+                        header("Location: driver-dashboard.php");   // ← FIXED
+                    } else {
+                        header("Location: customer_dashboard.php");
+                    }
+                    exit;
+                } else {
+                    $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Invalid email or password!</div>";
+                }
+            } else {
+                $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Please enter both email and password!</div>";
+            }
+        } catch (PDOException $e) {
+            $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>DB Error: " . $e->getMessage() . "</div>";
+        } catch (Exception $e) {
+            $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Error: " . $e->getMessage() . "</div>";
         }
-        exit;
     } else {
-        $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Invalid email or password!</div>";
+        $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Database connection failed!</div>";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,9 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>GlowLink - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+   
     <style>
-        /* আগের সব সিএসএস সেম আছে */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background: url('/glowlinkp/public/images/bk.jpg') center/cover no-repeat fixed; min-height: 100vh; display: flex; justify-content: center; align-items: center; position: relative; }
         body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 0; }
@@ -81,11 +98,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
-
     <div class="auth-container">
         <h2>WELCOME BACK</h2>
         <p class="subtitle">Login to your GlowLink account</p>
-
         <div class="auth-slider">
             <div class="auth-slide-track">
                 <img src="/glowlinkp/public/images/bg1.jpg" alt="Slide 1">
@@ -93,9 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <img src="/glowlinkp/public/images/bg3.jpg" alt="Slide 3">
             </div>
         </div>
-
         <?php echo $message; ?>
-
         <form action="login.php" method="POST">
             <div class="input-group">
                 <div class="input-with-icon">
@@ -103,16 +116,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="email" name="email" placeholder="Email Address" required>
                 </div>
             </div>
-
             <div class="input-group">
                 <div class="input-with-icon">
                     <i class="fa-solid fa-lock"></i>
                     <input type="password" name="password" placeholder="Password" required>
                 </div>
             </div>
-
             <a href="#" class="forgot-pass">Forgot Password?</a>
-
             <div class="btn-wrapper">
                 <button type="submit" class="sci-fi-btn">
                     <div id="clip"></div>
@@ -122,9 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </button>
             </div>
         </form>
-
         <a href="register.php" class="switch-link">Don't have an account? <span>Register</span></a>
     </div>
-
 </body>
 </html>

@@ -1,11 +1,13 @@
--- Create the database
-CREATE DATABASE IF NOT EXISTS glowlinkp_db;
+-- Puran database thakle seta delete kore ekdom fresh kore toiri korbe
+DROP DATABASE IF EXISTS glowlinkp_db;
+CREATE DATABASE glowlinkp_db;
 USE glowlinkp_db;
 
 -- 1. CORE AUTHENTICATION TABLE
--- Handles login for everyone (Admin, Customer, Retailer)
+-- Ekhane 'name' add kora hoyeche jate registration er somoy problem na hoy
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'customer', 'retailer') NOT NULL,
@@ -14,9 +16,9 @@ CREATE TABLE users (
 );
 
 -- 2. CUSTOMER PROFILE TABLE (Your Customer Database)
+-- Ehan theke 'full_name' sorano hoyeche karon eta ekhon 'users' table e ache
 CREATE TABLE customers (
     user_id INT PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
     skin_type ENUM('normal', 'dry', 'oily', 'combination', 'sensitive') DEFAULT 'normal',
     allergies TEXT, -- To help AI recommend better products

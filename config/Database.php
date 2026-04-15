@@ -3,7 +3,8 @@
 
 class Database {
     // Database credentials
-    private $host = 'localhost';
+    private $host = '127.0.0.1'; // 127.0.0.1 use korbo localhost er jaygay
+    private $port = '3308';      // Amader notun kaj kora port
     private $db_name = 'glowlinkp_db';
     private $username = 'root';
     private $password = '';
@@ -14,16 +15,15 @@ class Database {
         $this->conn = null;
 
         try {
-            // Using PDO for high security and prepared statements
+            // PDO connection string with port
             $this->conn = new PDO(
-                "mysql:host=" . $this->host . ";dbname=" . $this->db_name, 
+                "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name, 
                 $this->username, 
                 $this->password
             );
             
-            // Set PDO error mode to exception for easier debugging
+            // Set PDO error mode to exception
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            // Ensure data is sent with correct encoding
             $this->conn->exec("set names utf8");
             
         } catch(PDOException $exception) {

@@ -1,5 +1,6 @@
 <?php
 // glowlinkp/public/register.php
+session_start();
 require_once '../config/Database.php';
 require_once '../classes/User.php';
 
@@ -9,23 +10,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $database = new Database();
     $db = $database->getConnection();
     
-    $user = new User($db);
-    $user->name = $_POST['name'];
-    $user->email = $_POST['email'];
-    $user->password = $_POST['password'];
-    $user->role = $_POST['role'];
+    if ($db) {
+        $user = new User($db);
+        $user->name = trim($_POST['name'] ?? '');
+        $user->email = trim($_POST['email'] ?? '');
+        $user->password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+        
+        // Securely map user role, denying forced 'admin' through frontend
+        $allowed_roles = ['customer', 'retailer', 'driver'];
+        $posted_role = $_POST['role'] ?? 'customer';
+        $user->role = in_array($posted_role, $allowed_roles) ? $posted_role : 'customer';
 
-    // Check if passwords match
-    if ($_POST['password'] !== $_POST['confirm_password']) {
-        $message = "<div class='alert alert-error'>Passwords do not match!</div>";
-    } elseif ($user->emailExists()) {
-        $message = "<div class='alert alert-error'>Email is already registered!</div>";
-    } else {
-        if ($user->register()) {
-            $message = "<div class='alert alert-success'>Registration successful! <a href='login.php' style='color:#27c39f;'>Login here</a></div>";
-        } else {
-            $message = "<div class='alert alert-error'>Unable to register. Please try again.</div>";
+        try {
+            if (empty($user->name) || empty($user->email) || empty($user->password) || empty($confirm_password)) {
+                $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>All fields are required!</div>";
+            } elseif (!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Invalid email format!</div>";
+            } elseif ($user->password !== $confirm_password) {
+                $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Passwords do not match!</div>";
+            } elseif ($user->emailExists()) {
+                $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Email is already registered!</div>";
+            } else {
+                if ($user->register()) {
+                    $message = "<div style='color: #10b981; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px;'>Registration successful! <a href='login.php' style='color:#10b981; font-weight: bold; text-decoration: underline;'>Login here</a></div>";
+                } else {
+                    $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Unable to register. Please try again.</div>";
+                }
+            }
+        } catch (PDOException $e) {
+            $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>DB Error: " . $e->getMessage() . "</div>";
+        } catch (Exception $e) {
+            $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Error: " . $e->getMessage() . "</div>";
         }
+    } else {
+        $message = "<div style='color: #ef4444; text-align: center; margin-bottom: 15px; font-size: 14px; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;'>Database connection failed.</div>";
     }
 }
 ?>
@@ -81,6 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <select name="role" required>
                         <option value="customer">Customer (Buy Products)</option>
                         <option value="retailer">Retailer (Sell Products)</option>
+                        <option value="driver">Driver (Delivery)</option>
                     </select>
                 </div>
             </div>

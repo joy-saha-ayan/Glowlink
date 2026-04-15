@@ -1,9 +1,18 @@
 <?php
-// glowlinkp/public/customer_dashboard.php
 session_start();
-if(!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'customer') {
-    header("Location: login.php");
-    exit();
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['user_role'] !== 'customer') {
+    // If it's driver, redirect them to the their own dashboard or custom here.
+    if(isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'driver') {
+        // Driver specific code if needed, for now let them access customer dashboard or build separate.
+        // I will let drivers pass through here for demonstration, or we can enforce purely customer.
+        if ($_SESSION['user_role'] !== 'customer' && $_SESSION['user_role'] !== 'driver') {
+             header("Location: login.php");
+             exit;
+        }
+    } else {
+        header("Location: login.php");
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -11,328 +20,80 @@ if(!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'customer') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlowLink - My Skincare Assistant</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>GlowLink - Customer Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Dashboard Specific Premium Overrides */
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* Clean, professional background */
-            display: block; /* Overrides the login page flexbox */
-            margin: 0;
-            padding: 20px;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Poppins', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1920&q=80') center/cover fixed; min-height: 100vh; color: #fff; perspective: 1200px; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        body::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(15, 23, 42, 0.7), rgba(0, 0, 0, 0.9)); z-index: -1; }
 
-        .dashboard-wrapper {
-            max-width: 1400px;
-            margin: 0 auto;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1000px; margin-bottom: 50px; transform: translateZ(10px); }
+        .logo-text { font-size: 28px; font-weight: 700; background: linear-gradient(to right, #ec4899, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)); }
 
-        /* Sleek Top Navbar */
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
+        .btn-logout { padding: 10px 25px; border-radius: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; text-decoration: none; font-weight: 600; backdrop-filter: blur(10px); transition: 0.4s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .btn-logout:hover { background: #ef4444; border-color: #ef4444; transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 20px rgba(239, 68, 68, 0.5); }
 
-        .top-nav h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .dashboard-container { width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 2fr; gap: 30px; transform-style: preserve-3d; }
 
-        .logout-btn {
-            background: #ff4757;
-            color: white;
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .profile-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: translateZ(20px); transition: 0.5s; position: relative; overflow: hidden; }
+        .profile-card:hover { transform: translateZ(40px) rotateY(5deg); border-color: rgba(236, 72, 153, 0.3); box-shadow: 10px 25px 50px rgba(0,0,0,0.6); }
         
-        .logout-btn:hover {
-            background: #ff6b81;
-            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3);
-        }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #ec4899; padding: 5px; margin: 0 auto 20px; box-shadow: 0 0 20px rgba(236, 72, 153, 0.5); }
+        .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .profile-name { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+        .profile-role { color: #ec4899; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
 
-        /* 50/50 Split Grid */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            flex: 1;
-            min-height: 0; /* Keeps it contained */
-        }
-
-        /* Premium Glass Panels */
-        .panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 1);
-        }
-
-        .panel-header {
-            padding: 20px;
-            border-bottom: 1px solid #edf2f7;
-            background: #ffffff;
-        }
-
-        .panel-header h2 {
-            margin: 0;
-            font-size: 18px;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .panel-header p {
-            margin: 5px 0 0 0;
-            font-size: 13px;
-            color: #718096;
-        }
-
-        /* Chat Area */
-        .chat-body {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background: #f8fafc;
-        }
-
-        .msg-bubble {
-            max-width: 75%;
-            padding: 12px 18px;
-            border-radius: 18px;
-            font-size: 14px;
-            line-height: 1.5;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .bot-msg {
-            background: #ffffff;
-            color: #2d3748;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .user-msg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .chat-footer {
-            padding: 15px;
-            background: #ffffff;
-            border-top: 1px solid #edf2f7;
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-footer input {
-            flex: 1;
-            padding: 12px 20px;
-            border: 1px solid #e2e8f0;
-            border-radius: 25px;
-            outline: none;
-            transition: 0.3s;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .chat-footer input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .chat-footer button {
-            background: #667eea;
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .chat-footer button:hover {
-            background: #5a67d8;
-            transform: scale(1.05);
-        }
-
-        /* Products Area */
-        .products-body {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f8fafc;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: #a0aec0;
-            margin-top: 50px;
-        }
-
-        .empty-state i {
-            font-size: 40px;
-            margin-bottom: 15px;
-            color: #cbd5e0;
-        }
-
-        /* Dummy Product Card to show the design vision */
-        .demo-card {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 15px;
-            opacity: 0.6; /* Dimmed because it's a demo */
-        }
+        .purchases-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8)); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: translateZ(10px); transition: 0.5s; }
+        .purchases-card:hover { transform: translateZ(30px) rotateX(2deg); border-color: rgba(255,255,255,0.1); }
         
-        .demo-info h4 { margin: 0; color: #2d3748; font-size: 15px;}
-        .demo-info p { margin: 3px 0 0 0; font-size: 12px; color: #718096;}
-        .demo-price { font-weight: bold; color: #38a169; background: #c6f6d5; padding: 5px 10px; border-radius: 8px; font-size: 14px;}
+        .purchases-card h3 { margin-bottom: 25px; font-size: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+
+        .timeline { position: relative; padding-left: 30px; }
+        .timeline::before { content: ''; position: absolute; left: 0; top: 0; width: 2px; height: 100%; background: rgba(236, 72, 153, 0.3); }
+        
+        .timeline-item { position: relative; margin-bottom: 25px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; transition: 0.3s; border: 1px solid transparent; }
+        .timeline-item::before { content: ''; position: absolute; left: -36px; top: 20px; width: 14px; height: 14px; border-radius: 50%; background: #ec4899; box-shadow: 0 0 10px #ec4899; }
+        .timeline-item:hover { background: rgba(255,255,255,0.05); transform: scale(1.02) translateZ(15px); border-color: rgba(236, 72, 153, 0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .timeline-date { font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+
+        .btn-3d-shop { display: inline-block; margin-top: 30px; padding: 15px 40px; background: linear-gradient(135deg, #ec4899, #e11d48); border-radius: 30px; color: white; text-decoration: none; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transform-style: preserve-3d; transition: 0.3s; box-shadow: 0 10px 20px rgba(225, 29, 72, 0.4), inset 0 -3px 0 rgba(0,0,0,0.2); }
+        .btn-3d-shop:hover { transform: translateY(-5px) translateZ(20px); box-shadow: 0 15px 30px rgba(225, 29, 72, 0.6), inset 0 -3px 0 rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
-
-    <div class="dashboard-wrapper">
-        
-        <header class="top-nav">
-            <h1><i class="fa-solid fa-sparkles" style="color: #f6e05e;"></i> GlowLink</h1>
-            <a href="logout.php" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
-        </header>
-
-        <main class="dashboard-grid">
-            
-            <section class="panel">
-                <div class="panel-header">
-                    <h2><i class="fa-solid fa-robot" style="color: #667eea;"></i> GlowBot Assistant</h2>
-                    <p>Status: <span style="color: #48bb78; font-weight: bold;">● Online</span></p>
-                </div>
-                
-                <div class="chat-body" id="chatWindow">
-                    <div class="msg-bubble bot-msg">
-                        Hi there! 👋 I am your GlowLink AI. Let's find the perfect skincare routine for you. What is your skin type, or what specific issues (like acne or dryness) are you looking to treat today?
-                    </div>
-                </div>
-
-                <div class="chat-footer">
-                    <input type="text" id="userInput" placeholder="Type your skincare concerns here..." onkeypress="handleKeyPress(event)">
-                    <button onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
-            </section>
-
-            <section class="panel">
-                <div class="panel-header">
-                    <h2><i class="fa-solid fa-tags" style="color: #ed8936;"></i> Live Price Tracker</h2>
-                    <p>Aggregating the best deals across multiple retailers.</p>
-                </div>
-                
-                <div class="products-body" id="productResults">
-                    
-                    <div class="empty-state" id="emptyState">
-                        <i class="fa-solid fa-magnifying-glass-chart"></i>
-                        <p>Start a conversation with GlowBot.<br>Your personalized matches and lowest prices will appear here.</p>
-                    </div>
-
-                    <div class="demo-card" style="display: none;" id="demoCard">
-                        <div class="demo-info">
-                            <h4>Cerave Hydrating Cleanser</h4>
-                            <p><i class="fa-solid fa-store"></i> Daraz | <i class="fa-solid fa-check-circle" style="color: green;"></i> In Stock</p>
-                        </div>
-                        <div class="demo-price">$12.99</div>
-                    </div>
-
-                </div>
-            </section>
-
-        </main>
+    <div class="top-bar">
+        <div class="logo-text">GlowLink</div>
+        <a href="logout.php" class="btn-logout"><i class="fa-solid fa-power-off"></i> Sign Out</a>
     </div>
 
-    <script>
-        const chatWindow = document.getElementById('chatWindow');
-        const userInput = document.getElementById('userInput');
-        const emptyState = document.getElementById('emptyState');
-        const demoCard = document.getElementById('demoCard');
+    <div class="dashboard-container">
+        <div class="profile-card">
+            <div class="avatar">
+                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name']); ?>&background=ec4899&color=fff&size=120" alt="Avatar">
+            </div>
+            <h2 class="profile-name"><?php echo htmlspecialchars($_SESSION['user_name']); ?></h2>
+            <p class="profile-role"><?php echo htmlspecialchars($_SESSION['user_role']); ?> VIP</p>
+            <br>
+            <p style="color: #94a3b8; font-size: 14px;">Member since 2026</p>
+            <a href="shop.php" class="btn-3d-shop" style="margin-top: 40px; padding: 12px 30px;">Shop Now</a>
+        </div>
 
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        function sendMessage() {
-            const text = userInput.value.trim();
-            if (text === '') return;
-
-            // 1. User Message
-            addMessage(text, 'user-msg');
-            userInput.value = '';
-
-            // 2. Typing Indicator
-            const typingId = 'typing-' + Date.now();
-            addMessage('<i class="fa-solid fa-ellipsis"></i>', 'bot-msg', typingId);
-
-            // 3. Simulate AI response & show dummy product
-            setTimeout(() => {
-                document.getElementById(typingId).remove();
-                addMessage("I am searching our database for the best matches and comparing prices in real-time... (Backend API coming next!)", 'bot-msg');
-                
-                // Hide empty state and show the beautiful product card demo
-                emptyState.style.display = 'none';
-                demoCard.style.display = 'flex';
-                demoCard.style.opacity = '1'; 
-            }, 1000);
-        }
-
-        function addMessage(text, className, id = '') {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg-bubble ' + className;
-            msgDiv.innerHTML = text; // innerHTML allows us to use FontAwesome icons in messages
-            if (id) msgDiv.id = id;
-            
-            chatWindow.appendChild(msgDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-    </script>
-
+        <div class="purchases-card">
+            <h3>Recent Activity & Orders</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">Just Now</div>
+                    <h4>Logged into GlowLink</h4>
+                    <p style="font-size: 13px; color: #cbd5e1; margin-top: 5px;">You have successfully accessed your secure dashboard.</p>
+                </div>
+                <div style="text-align: center; color: #94a3b8; margin-top: 40px; font-size: 14px;">
+                    <i class="fa-solid fa-box-open" style="font-size: 30px; margin-bottom: 15px; opacity: 0.6; color: #ec4899;"></i><br>
+                    You haven't placed any orders yet.<br>
+                    Click "Shop Now" to explore our products!
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
