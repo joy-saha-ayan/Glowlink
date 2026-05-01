@@ -67,8 +67,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSI
             <li><a href="#" class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
             <li><a href="#"><i class="fa-solid fa-users"></i> Manage Users</a></li>
             <li><a href="#"><i class="fa-solid fa-box"></i> Products</a></li>
-            <li><a href="#"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
-            <li><a href="#"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            <li><a href="admin_analysis.php"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
+            <li><a href="setting.php"><i class="fa-solid fa-gear"></i> Settings</a></li>
         </ul>
     </div>
     

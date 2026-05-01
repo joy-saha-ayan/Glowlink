@@ -12,17 +12,24 @@ $db = $database->getConnection();
 $retailer_id = $_SESSION['user_id'] ?? 1; 
 $user_name = $_SESSION['user_name'] ?? 'Retailer Admin';
 
-// ১. রিয়েল ডাটার জন্য ভ্যারিয়েবল ইনিশিয়ালাইজেশন
 $stats = ['total_revenue' => 0, 'total_orders' => 0, 'products_sold' => 0, 'pending_orders' => 0];
 $recent_orders = [];
 $low_stock_products = [];
 $chart_labels = [];
 $chart_data = [];
+$retailer_logo = '';
 
-// ২. সরাসরি ডাটাবেস থেকে রিয়েল ডাটা ফেচ করা
 if ($db) {
     try {
-        // Stats Fetch
+        $logo_query = "SELECT logo FROM settings WHERE retailer_id = :rid LIMIT 1";
+        $stmt_logo = $db->prepare($logo_query);
+        $stmt_logo->bindParam(':rid', $retailer_id);
+        $stmt_logo->execute();
+        $logo_data = $stmt_logo->fetch(PDO::FETCH_ASSOC);
+        if ($logo_data && !empty($logo_data['logo'])) {
+            $retailer_logo = $logo_data['logo'];
+        }
+
         $stat_query = "SELECT 
             COALESCE(SUM(price), 0) as total_revenue, 
             COUNT(id) as total_orders, 
@@ -37,21 +44,18 @@ if ($db) {
         $stats['total_orders'] = $real_stats['total_orders'];
         $stats['pending_orders'] = $real_stats['pending_orders'];
 
-        // Products Sold Fetch
         $sold_query = "SELECT COUNT(id) as sold FROM orders WHERE retailer_id = :rid AND status != 'Pending'";
         $stmt_sold = $db->prepare($sold_query);
         $stmt_sold->bindParam(':rid', $retailer_id);
         $stmt_sold->execute();
         $stats['products_sold'] = $stmt_sold->fetch(PDO::FETCH_ASSOC)['sold'] ?? 0;
 
-        // Low Stock Fetch (Stock <= 5)
         $stock_query = "SELECT name, stock FROM products WHERE retailer_id = :rid AND stock <= 5 ORDER BY stock ASC LIMIT 4";
         $stmt_stock = $db->prepare($stock_query);
         $stmt_stock->bindParam(':rid', $retailer_id);
         $stmt_stock->execute();
         $low_stock_products = $stmt_stock->fetchAll(PDO::FETCH_ASSOC);
 
-        // Recent Orders Fetch
         $order_query = "SELECT o.id, o.customer_name, p.name as product_name, p.image, o.price, o.status 
                         FROM orders o 
                         JOIN products p ON o.product_id = p.id 
@@ -61,7 +65,6 @@ if ($db) {
         $stmt_order->execute();
         $recent_orders = $stmt_order->fetchAll(PDO::FETCH_ASSOC);
 
-        // Chart Data Fetch (Last 7 Days)
         $chart_query = "SELECT DATE(order_date) as order_day, SUM(price) as daily_revenue 
                         FROM orders 
                         WHERE retailer_id = :rid AND order_date >= DATE(NOW()) - INTERVAL 7 DAY 
@@ -75,14 +78,12 @@ if ($db) {
             $chart_data[] = $row['daily_revenue'];
         }
 
-        // If no chart data, provide fallback empty arrays to prevent JS errors
         if(empty($chart_labels)) {
             $chart_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             $chart_data = [0, 0, 0, 0, 0, 0, 0];
         }
 
     } catch (PDOException $e) {
-        // Error handling
     }
 }
 ?>
@@ -96,7 +97,6 @@ if ($db) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* আপনার আগের সব CSS এখানে থাকবে... */
         :root {
             --bg-color: #050b14;
             --glass-bg: rgba(30, 41, 59, 0.4);
@@ -146,7 +146,6 @@ if ($db) {
 
         .glass-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.3)); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); position: relative; overflow: hidden; transform-style: preserve-3d; }
         
-        /* Clickable Card Link Reset */
         .card-link { text-decoration: none; color: inherit; display: block; cursor: pointer; transition: transform 0.3s ease; }
         .card-link:hover { transform: translateY(-5px); }
         
@@ -185,14 +184,21 @@ if ($db) {
 <body>
 
     <aside class="sidebar">
-        <div class="logo">Glow<span>Link</span></div>
+        <?php if(!empty($retailer_logo)): ?>
+            <div style="text-align: center; margin-bottom: 40px;">
+                <img src="<?php echo htmlspecialchars($retailer_logo); ?>" alt="Retailer Logo" style="max-width: 80%; max-height: 80px; object-fit: contain;">
+            </div>
+        <?php else: ?>
+            <div class="logo">Glow<span>Link</span></div>
+        <?php endif; ?>
+        
         <ul class="nav-links">
             <li><a href="retailer_dashboard.php" class="active"><i class="fa-solid fa-border-all"></i> Dashboard</a></li>
             <li><a href="products.php"><i class="fa-solid fa-box-open"></i> Products</a></li>
             <li><a href="orders.php"><i class="fa-solid fa-clipboard-list"></i> Orders</a></li>
             <li><a href="customers.php"><i class="fa-solid fa-users"></i> Customers</a></li>
-            <li><a href="analytics.php"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
-            <li><a href="settings.php"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            <li><a href="admin_analysis.php"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
+            <li><a href="setting.php"><i class="fa-solid fa-gear"></i> Settings</a></li>
         </ul>
         <a href="logout.php" style="margin-top: auto; padding: 12px 20px; background: linear-gradient(135deg, var(--danger), #b91c1c); color: white; text-align: center; border-radius: 12px; text-decoration: none; font-weight: 600; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);"><i class="fa-solid fa-power-off"></i> Logout</a>
     </aside>
@@ -330,7 +336,6 @@ if ($db) {
         gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); 
         gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
 
-        // PHP থেকে রিয়েল ডাটা ইনজেক্ট করা হয়েছে
         const chartLabels = <?php echo json_encode($chart_labels); ?>;
         const chartData = <?php echo json_encode($chart_data); ?>;
 
