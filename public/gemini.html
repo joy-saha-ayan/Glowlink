@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlowLink - AI Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Inheriting your GlowLink Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: url('/glowlinkp/public/images/bk.jpg') center/cover no-repeat fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e2e8f0;
+            position: relative;
+            z-index: 1;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20, 10, 30, 0.4); 
+            z-index: -1;
+        }
+
+        /* Frosted Glass Chat Container */
+        .auth-container {
+            background: rgba(30, 25, 45, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            width: 95%;
+            max-width: 600px; 
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        h2 { text-align: center; margin-bottom: 20px; letter-spacing: 2px; color: #fff; font-weight: 800; }
+
+        /* Chat Log Styling */
+        #log {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Message Bubbles */
+        .msg {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 85%;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .user {
+            background: rgba(244, 114, 182, 0.2);
+            color: #f472b6;
+            margin-left: auto;
+            border-right: 3px solid #f472b6;
+        }
+
+        .bot {
+            background: rgba(226, 165, 182, 0.1);
+            color: #e2e8f0;
+            margin-right: auto;
+            border-left: 3px solid #e2a5b6;
+        }
+
+        /* Input Grouping */
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-with-icon { 
+            position: relative; 
+            flex-grow: 1;
+        }
+
+        .input-with-icon i {
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%); 
+            color: #e2a5b6; 
+        }
+
+        .input-with-icon input {
+            width: 100%; 
+            padding: 14px 15px 14px 50px; 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px; 
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            outline: none;
+        }
+
+        /* Sci-Fi Button Scaling for Chat */
+        .sci-fi-btn {
+            position: relative;
+            width: 100px; height: 45px;
+            background: transparent; border: none;
+            cursor: pointer; color: #fff; font-weight: bold;
+        }
+
+        #clip {
+            --color: #e2a5b6;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: 2px solid var(--color);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);
+        }
+
+        /* Scrollbar Styling */
+        #log::-webkit-scrollbar { width: 5px; }
+        #log::-webkit-scrollbar-thumb { background: #e2a5b6; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2>GLOW AI</h2>
+        
+        <div id="log">
+            <div class="msg bot">Hello! I'm your GlowLink assistant. How can I help with your skincare journey today?</div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-with-icon">
+                <i class="fa-solid fa-comment-dots"></i>
+                <input id="inp" type="text" placeholder="Type your message..." autocomplete="off">
+            </div>
+
+            <button id="send" class="sci-fi-btn">
+                <span style="position:relative; z-index:10; font-size: 12px;">SEND</span>
+                <div id="clip"></div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const inp = document.getElementById('inp');
+        const sendBtn = document.getElementById('send');
+
+        function addMessage(text, cls) {
+            const div = document.createElement('div');
+            div.className = 'msg ' + cls;
+            div.textContent = text;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const msg = inp.value.trim();
+            if (!msg) return;
+
+            addMessage(msg, 'user');
+            inp.value = '';
+
+            try {
+                // Pointing to your specific API folder
+                const resp = await fetch('api/gemini_chat.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: msg})
+                });
+                
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+                
+                const reply = data.choices?.[0]?.message?.content ?? 'Sorry, I couldn\'t process that.';
+                addMessage(reply, 'bot');
+            } catch (e) {
+                addMessage('Error: ' + e.message, 'bot');
+            }
+        }
+
+        sendBtn.onclick = sendMessage;
+        inp.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>
